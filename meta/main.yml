@@ -1,6 +1,6 @@
 galaxy_info:
   author: pddg
-  role_name: ansible-role-ldap-server
+  role_name: ldap_server
   description: Role for install slapd and manage its user
   company: StudioAquatan
 
