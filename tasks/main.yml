@@ -11,6 +11,11 @@
 
 - include_vars: "user_attrs.yml"
 
+- include: "validate_uid.yml"
+  with_dict: "{{ ldap_server_group_entries }}"
+  loop_control:
+    loop_var: outer_item
+
 - debug:
     msg: "{{ ldap_server_users }}"
 

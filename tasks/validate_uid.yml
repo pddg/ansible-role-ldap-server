@@ -1,0 +1,9 @@
+---
+- name: Ensure that specified uid exists in user entries.
+  assert:
+    that:
+      - "inner_item in ldap_server_user_entries.keys()"
+    fail_msg: "'{{ inner_item }}' in '{{ outer_item.key }}' group does not exists on your user entries."
+  with_items: "{{ outer_item.value.memberUid }}"
+  loop_control:
+    loop_var: inner_item
