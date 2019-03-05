@@ -1,0 +1,5 @@
+---
+- name: Prerequisite for this role (apt)
+  apt:
+    name: "{{ ldap_server_prerequisites }}"
+    cache_valid_time: 3600

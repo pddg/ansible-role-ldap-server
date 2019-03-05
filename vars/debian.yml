@@ -1,0 +1,8 @@
+---
+ldap_server_debconf:
+  - section: "password1"
+    value: "{{ ldap_server_passwd }}"
+    vtype: "password"
+  - section: "password2"
+    value: "{{ ldap_server_passwd }}"
+    vtype: "password"

@@ -1,0 +1,2 @@
+---
+ldap_server_base_dc: '{{ "dc=" + ldap_server_domain.split(".") | join(",dc=") }}'

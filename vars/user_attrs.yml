@@ -1,0 +1,48 @@
+---
+# ユーザ属性のキー一覧
+ldap_server_user_attr_keys:
+  - cn
+  - sn
+  - givenName
+  - gecos
+  - mail
+  - homeDirectory
+  - uidNumber
+  - gidNumber
+
+# uidのリストを作る
+ldap_server_uid_list: '{{ ldap_server_user_entries | dict2items | map(attribute="key") | list }}'
+
+# それぞれのユーザ属性のディクショナリをリストにまとめる
+ldap_server_attrs_list: '{{ ldap_server_uid_list | map("extract", ldap_server_user_entries) | list }}'
+
+# それぞれの要素を抽出
+ldap_server_cn_list: '{{ ldap_server_attrs_list | map(attribute="cn") | list }}'
+ldap_server_sn_list: '{{ ldap_server_attrs_list | map(attribute="sn") | list }}'
+ldap_server_givenname_list: '{{ ldap_server_attrs_list | map(attribute="givenName") | list }}'
+# ldap_server_gecos_list: '{{ ldap_server_attrs_list | map(attribute="cn") | list }}'
+ldap_server_mail_list: '{{ ldap_server_uid_list | map("regex_replace", "^(.+)$", "\1@" + ldap_server_domain) | list }}'
+ldap_server_homedir_list: '{{ ldap_server_uid_list | map("regex_replace", "^(.+)$", ldap_server_homedir_prefix + "/\1") | list}}'
+ldap_server_uidnumber_list: '{{ ldap_server_attrs_list | map(attribute="uidNumber") | list }}'
+ldap_server_gidnumber_list: |
+  {% set ldap_server_tmp_list = [] %}
+  {% for i in range(ldap_server_uid_list | length) %}
+  {%   set _ = ldap_server_tmp_list.append(ldap_server_default_gid_number) %}
+  {% endfor %}
+  {{ ldap_server_tmp_list }}
+
+ldap_server_attrs_tmp_list: |
+  {% set ldap_server_tmp_list = [] %}
+  {% for item in ldap_server_cn_list | zip(ldap_server_sn_list, ldap_server_givenname_list, ldap_server_cn_list, ldap_server_mail_list, ldap_server_homedir_list, ldap_server_uidnumber_list, ldap_server_gidnumber_list)%}
+  {%   set _ = ldap_server_tmp_list.append(dict(ldap_server_user_attr_keys | zip(item)))%}
+  {% endfor %}
+  {{ ldap_server_tmp_list }}
+
+ldap_server_user_attrs_merged: |
+  {% set ldap_server_tmp_list = [] %}
+  {% for item in ldap_server_attrs_tmp_list | zip(ldap_server_attrs_list) %}
+  {% set _ = ldap_server_tmp_list.append(item.0 | combine(item.1))%}
+  {% endfor %}
+  {{ ldap_server_tmp_list }}
+
+ldap_server_users: "{{ dict(ldap_server_uid_list | zip(ldap_server_user_attrs_merged)) }}"

@@ -1,0 +1,14 @@
+---
+- name: "Ensure attrs for `cn={{ outer_item.key }},ou=groups,{{ ldap_server_base_dc }}`"
+  ldap_attr:
+    dn: "cn={{ outer_item.key }},ou=groups,{{ ldap_server_base_dc }}"
+    name: "{{ inner_item.key }}"
+    values: "{{ inner_item.value }}"
+    bind_dn: "{{ ldap_server_bind_dn | default(omit) }}"
+    bind_pw: "{{ ldap_server_bind_pw | default(omit) }}"
+    validate_certs: "{{ ldap_server_validate_certs }}"
+    state: exact
+  with_dict: "{{ outer_item.value }}"
+  loop_control:
+    loop_var: inner_item
+

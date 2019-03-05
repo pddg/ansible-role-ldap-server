@@ -1,0 +1,108 @@
+---
+# LDAPのドメイン名を設定する.
+# 事前に/etc/hostsを編集しておいた上でslapdをインストールすること．
+ldap_server_domain: example.com
+#
+# インストール時に聞かれるパスワード
+ldap_server_passwd: "password"
+# 
+# `ldap_server_base_dc` という便利変数を用意した．
+# "example.com"を`ldap_server_domain`に指定すると，`ldap_server_base_dc`の値は以下の様になる．
+#
+# ldap_server_base_dc: "dc=example, dc=com"
+
+ldap_server_prerequisites:
+  - debconf
+  - debconf-utils
+  - python3-pip
+  - libldap2-dev
+  - libsasl2-dev
+
+ldap_server_ldap_prerequisites:
+  - python-ldap
+
+# LDAPサーバに対して実行することを想定している．指定しない場合，unixソケットが用いられる．
+# ldap_server_uri: ldapi:///
+
+# 操作のためのbind_dnとそのパスワードの設定．
+# If this omitted, use SASL bind with the EXTERNAL mechanism
+# ldap_server_bind_dn: "cn=admin, {{ ldap_server_base_dc }}"
+# ldap_server_bind_pw: "{{ ldap_server_passwd }}"
+
+# 自己署名証明書を使うならばno
+ldap_server_validate_certs: no
+
+# Organization unitの設定．
+# ユーザとグループ用のouを作る
+ldap_server_container_entries:
+  - groups
+  - users
+
+# デフォルトで使うホームディレクトリのプレフィクス
+ldap_server_homedir_prefix: /home
+
+# デフォルトのログインシェル
+ldap_server_default_login_shell: /bin/bash
+
+# ユーザに設定するデフォルトのgidNumber
+ldap_server_default_gid_number: 20
+
+# Linux用ユーザの設定
+#
+# ldap_server_user_entries:
+#   `uid`:
+#     uidNumber: ユーザID（整数）
+#     cn: 氏名
+#     sn: 姓
+#     givenName: 名
+#     # 以降は省略可能な値
+#     gecos: 氏名．省略した場合，`cn`の値がそのまま使われる
+#     gidNumber: グループID（整数）．デフォルトは`ldap_server_default_gid_number`
+#     mail: メールアドレス．省略した場合は`{{ uid }}@{{ ldap_server_domain }}`
+#     loginShell: 使用するシェル．省略した場合は`ldap_server_default_login_shell`
+#     homeDirectory: ホームディレクトリの場所．省略した場合は`{{ ldap_server_homedir_prefix }}/{{ uid }}`
+#
+# 例）
+#
+# ldap_server_user_entries:
+#   s-user:
+#     uidNumber: 1000
+#     cn: Sample User
+#     sn: User
+#     givenName: Sample
+#   e-user:
+#     uidNumber: 1000
+#     cn: Example User
+#     sn: User
+#     givenName: Example
+#     gecos: Example User
+#     gidNumber: 1000
+#     mail: e-user@example.com
+#     loginShell: /bin/sh
+#     homeDirectory: /home/e-user
+#
+# homeDirectoryは"{{ ldap_server_homedir_prefix }}/{{ uid }}"で自動的に決まる．
+#
+ldap_server_user_entries: []
+
+# Linux用Groupのエントリの設定
+#
+# ldap_server_group_entries:
+#   name: グループ名
+#     gidNumber: グループのuid（整数）
+#     memberUid:
+#       - 所属させたいユーザのuid
+#
+# 例）
+#
+# ldap_server_group_entries:
+#   name: groupA
+#     gidNumber: 10
+#     memberUid:
+#       - e-user
+#       - hoge-user
+#
+# ldap_server_user_entriesにないuidを指定するとエラーで落ちる．
+#
+# 所属メンバーのuid（not uidNumber）を与える．
+ldap_server_group_entries: []

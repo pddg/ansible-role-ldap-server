@@ -1,0 +1,24 @@
+---
+- name: Setup configuration for slapd
+  debconf:
+    name: slapd
+    question: "slapd/{{ item.section }}"
+    value: "{{ item.value }}"
+    vtype: "{{ item.vtype }}"
+  loop: "{{ ldap_server_debconf }}"
+  register: deb
+  changed_when: deb.changed and deb.invocation.module_args.vtype != 'password'
+
+- name: Ensure that slapd and ldap-utils is installed
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - slapd
+      - ldap-utils
+
+- name: LDAP service is enabled
+  service:
+    name: slapd
+    enabled: yes
+    state: started

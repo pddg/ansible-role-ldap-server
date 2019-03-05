@@ -1,0 +1,14 @@
+---
+- hosts: all
+  roles:
+    - name: etc_hosts
+      becom: yes
+      vars:
+        etc_hosts_dns_suffix: vagrant.local
+    - name: ../../.
+      become: yes
+      vars:
+        ldap_server_domain: vagrant.local
+        ldap_server_passwd: "hogefuga"
+        ldap_server_bind_dn: "cn=admin, {{ ldap_server_base_dc }}"
+        ldap_server_bind_pw: "{{ ldap_server_passwd }}" 

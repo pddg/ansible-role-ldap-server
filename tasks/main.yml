@@ -1,0 +1,76 @@
+---
+- include_vars: "{{ ansible_os_family | lower }}.yml"
+
+- include_tasks: "{{ ansible_os_family | lower }}_prerequire.yml"
+
+- include_tasks: "{{ ansible_os_family | lower }}_main.yml"
+
+- name: Prerequisites for LDAP module
+  pip:
+    name: "{{ ldap_server_ldap_prerequisites }}"
+
+- include_vars: "user_attrs.yml"
+
+- debug:
+    msg: "{{ ldap_server_users }}"
+
+- name: Containers are added
+  ldap_entry:
+    dn: "ou={{ item }},{{ ldap_server_base_dc }}"
+    objectClass:
+      - "organizationalUnit"
+    bind_dn: "{{ ldap_server_bind_dn | default(omit) }}"
+    bind_pw: "{{ ldap_server_bind_pw | default(omit) }}"
+    validate_certs: "{{ ldap_server_validate_certs }}"
+  with_items:
+    - "{{ ldap_server_container_entries }}"
+
+- name: Users are added
+  ldap_entry:
+    dn: "uid={{ item.key }},ou=users,{{ ldap_server_base_dc }}"
+    objectClass:
+      - "inetOrgPerson"
+      - "posixAccount"
+      - "shadowAccount"
+    bind_dn: "{{ ldap_server_bind_dn | default(omit) }}"
+    bind_pw: "{{ ldap_server_bind_pw | default(omit) }}"
+    validate_certs: "{{ ldap_server_validate_certs }}"
+    attributes:
+      uidNumber: "{{ item.value.uidNumber }}"
+      gidNumber: "{{ item.value.gidNumber }}"
+      cn: "{{ item.value.cn }}"
+      sn: "{{ item.value.sn }}"
+      gecos: "{{ item.value.gecos }}"
+      givenName: "{{ item.value.givenName }}"
+      mail: "{{ item.value.email | default(item.key + '@' + ldap_server_domain) }}"
+      homeDirectory: "{{ ldap_server_homedir_prefix }}/{{ item.key }}"
+  with_dict:
+    - "{{ ldap_server_users }}"
+
+# 各Userエントリについて，その属性を2重ループで検証する
+- name: Ensure attrs of user entries
+  include: "ensure_user_attrs.yml"
+  with_dict: "{{ ldap_server_users }}"
+  loop_control:
+    loop_var: outer_item
+
+- name: Groups are added
+  ldap_entry:
+    dn: "cn={{ item.key }},ou=groups,{{ ldap_server_base_dc }}"
+    objectClass:
+      - "posixGroup"
+    bind_dn: "{{ ldap_server_bind_dn | default(omit) }}"
+    bind_pw: "{{ ldap_server_bind_pw | default(omit) }}"
+    validate_certs: "{{ ldap_server_validate_certs }}"
+    attributes:
+      gidNumber: "{{ item.value.gidNumber }}"
+      memberUid: "{{ item.value.memberUid }}"
+  with_dict:
+    - "{{ ldap_server_group_entries }}"
+
+# 各Groupエントリについて，その属性を2重ループで検証する
+- name: Ensure attrs of group entries
+  include: "ensure_group_attrs.yml"
+  with_dict: "{{ ldap_server_group_entries }}"
+  loop_control:
+    loop_var: outer_item
