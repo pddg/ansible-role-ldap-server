@@ -51,6 +51,9 @@
       homeDirectory: "{{ ldap_server_homedir_prefix }}/{{ item.key }}"
   with_dict:
     - "{{ ldap_server_users }}"
+  register: ldap_server_created_users
+  notify:
+    - register new password
 
 # 各Userエントリについて，その属性を2重ループで検証する
 - name: Ensure attrs of user entries

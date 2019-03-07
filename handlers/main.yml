@@ -1,2 +1,38 @@
 ---
-# handlers file for .
+- set_fact:
+    ldap_server_users_to_init: |
+      {% set ldap_server_tmp_list = [] %}
+      {% for item in ldap_server_created_users.results %}
+      {%   if item.changed %}
+      {%     set uid = item.item.key %}
+      {%     set passwd = "".join(item.item.value.cn.split(" ")) | lower %}
+      {%     set ldap_server_tmp_dict = {'uid': uid, 'passwd': passwd} %}
+      {%     set _ = ldap_server_tmp_list.append(ldap_server_tmp_dict) %}
+      {%   endif %}
+      {% endfor %}
+      {{ ldap_server_tmp_list }}
+  listen: register new password
+
+- name: Obtain initial password
+  listen: register new password
+  shell: "slappasswd -s '{{ item.passwd }}'"
+  register: hashed_passwds
+  loop: "{{ ldap_server_users_to_init }}"
+  changed_when: no
+
+- name: Register initial password to new account
+  listen: register new password
+  ldap_attr:
+    dn: "uid=item.0.uid,ou=users,{{ ldap_server_base_dc }}"
+    name: "userPassword"
+    values: "{{ item.1.stdout }}"
+    bind_dn: "{{ ldap_server_bind_dn | default(omit) }}"
+    bind_pw: "{{ ldap_server_bind_pw | default(omit) }}"
+    validate_certs: "{{ ldap_server_validate_certs }}"
+    state: exact
+  loop: "{{ ldap_server_users_to_init | zip(hashed_passwds) | list }}"
+
+- name: Initialized users and passwords
+  debug:
+    msg: "{{ ldap_server_users_to_init }}"
+  listen: register new password
