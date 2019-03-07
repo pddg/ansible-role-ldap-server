@@ -1,0 +1,4 @@
+---
+etc_hosts_dns_suffix: local
+etc_hosts_use_static_ip: no
+etc_hosts_enable_ipv6: no

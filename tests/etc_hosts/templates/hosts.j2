@@ -1,0 +1,27 @@
+# This file is managed by Ansible.
+# Please note that if you modify this manually, it will be overwritten by Ansible Playbook.
+
+127.0.0.1 localhost
+
+{% if etc_hosts_use_static_ip and ansible_host is defined %}
+{%   if etc_hosts_dns_suffix is defined %}
+{{ ansible_host }} {{ inventory_hostname_short }}.{{ etc_hosts_dns_suffix }} {{ inventory_hostname_short }}
+{%   else %}
+{{ ansible_host }} {{ inventory_hostname }} {{ inventory_hostname_short }}
+{%   endif %}
+{% else %}
+{%   if etc_hosts_dns_suffix is defined %}
+127.0.1.1 {{ inventory_hostname_short }}.{{ etc_hosts_dns_suffix }} {{ inventory_hostname_short }}
+{%   else %}
+127.0.1.1 {{ inventory_hostname }} {{ inventory_hostname_short }}
+{%   endif %}
+{% endif %}
+
+{% if etc_hosts_enable_ipv6 %}
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+{% endif %}

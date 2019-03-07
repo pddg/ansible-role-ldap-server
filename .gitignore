@@ -2,3 +2,4 @@
 *.log
 tests/*
 !tests/test.yml
+!tests/etc_hosts
