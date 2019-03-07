@@ -23,14 +23,14 @@
 - name: Register initial password to new account
   listen: register new password
   ldap_attr:
-    dn: "uid=item.0.uid,ou=users,{{ ldap_server_base_dc }}"
+    dn: "uid={{ item.0.uid }},ou=users,{{ ldap_server_base_dc }}"
     name: "userPassword"
     values: "{{ item.1.stdout }}"
     bind_dn: "{{ ldap_server_bind_dn | default(omit) }}"
     bind_pw: "{{ ldap_server_bind_pw | default(omit) }}"
     validate_certs: "{{ ldap_server_validate_certs }}"
     state: exact
-  loop: "{{ ldap_server_users_to_init | zip(hashed_passwds) | list }}"
+  loop: "{{ ldap_server_users_to_init | zip(hashed_passwds.results) | list }}"
 
 - name: Initialized users and passwords
   debug:
