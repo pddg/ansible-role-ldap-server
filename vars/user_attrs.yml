@@ -9,6 +9,7 @@ ldap_server_user_attr_keys:
   - homeDirectory
   - uidNumber
   - gidNumber
+  - loginShell
 
 # uidのリストを作る
 ldap_server_uid_list: '{{ ldap_server_user_entries | dict2items | map(attribute="key") | list }}'
@@ -31,9 +32,16 @@ ldap_server_gidnumber_list: |
   {% endfor %}
   {{ ldap_server_tmp_list }}
 
+ldap_server_loginshell_list: |
+  {% set ldap_server_tmp_list = [] %}
+  {% for i in range(ldap_server_uid_list | length) %}
+  {%   set _ = ldap_server_tmp_list.append(ldap_server_default_login_shell) %}
+  {% endfor %}
+  {{ ldap_server_tmp_list }}
+
 ldap_server_attrs_tmp_list: |
   {% set ldap_server_tmp_list = [] %}
-  {% for item in ldap_server_cn_list | zip(ldap_server_sn_list, ldap_server_givenname_list, ldap_server_cn_list, ldap_server_mail_list, ldap_server_homedir_list, ldap_server_uidnumber_list, ldap_server_gidnumber_list)%}
+  {% for item in ldap_server_cn_list | zip(ldap_server_sn_list, ldap_server_givenname_list, ldap_server_cn_list, ldap_server_mail_list, ldap_server_homedir_list, ldap_server_uidnumber_list, ldap_server_gidnumber_list, ldap_server_loginshell_list)%}
   {%   set _ = ldap_server_tmp_list.append(dict(ldap_server_user_attr_keys | zip(item)))%}
   {% endfor %}
   {{ ldap_server_tmp_list }}

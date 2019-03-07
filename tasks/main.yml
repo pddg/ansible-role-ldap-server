@@ -49,6 +49,7 @@
       givenName: "{{ item.value.givenName }}"
       mail: "{{ item.value.email | default(item.key + '@' + ldap_server_domain) }}"
       homeDirectory: "{{ ldap_server_homedir_prefix }}/{{ item.key }}"
+      loginShell: "{{ item.value.loginShell }}"
   with_dict:
     - "{{ ldap_server_users }}"
   register: ldap_server_created_users
