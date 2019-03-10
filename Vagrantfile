@@ -8,14 +8,14 @@ Vagrant.configure("2") do |config|
             "cn": "Taro Kosen",
             "sn": "Kosen",
             "givenName": "Taro",
-            "uidNumber": 1000
+            "uidNumber": 2000
         },
         "h-kosen": {
             "cn": "Hanako Kosen",
             "sn": "Kosen",
             "givenName": "Hanako",
             "gidNumber": 999,
-            "uidNumber": 1001
+            "uidNumber": 2001
         }
     }
     ldap_server_group_entries = {
@@ -25,7 +25,7 @@ Vagrant.configure("2") do |config|
                 "t-kosen", "h-kosen"
             ]
         },
-        "groupB": {
+        "admin": {
             "gidNumber": 101,
             "memberUid": [
                 "t-kosen"

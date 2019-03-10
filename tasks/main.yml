@@ -83,3 +83,52 @@
   with_dict: "{{ ldap_server_group_entries }}"
   loop_control:
     loop_var: outer_item
+
+- name: Add ppolicy schema
+  command: "ldapmodify -Y EXTERNAL -H ldapi:// -a -f /etc/ldap/schema/ppolicy.ldif"
+  failed_when: no
+  changed_when: no
+
+- name: Load ppolicy module
+  ldap_entry:
+    dn: "cn=module{1},cn=config"
+    objectClass:
+      - olcModuleList
+    attributes:
+      cn: "module{1}"
+      olcModuleLoad: "ppolicy.la"
+      olcModulePath: "/usr/lib/ldap"
+
+- name: PPolicy overlay
+  ldap_entry:
+    dn: "olcOverlay={0}ppolicy,olcDatabase={1}mdb,cn=config"
+    objectClass:
+      - olcOverlayConfig
+      - olcPPolicyConfig
+    validate_certs: "{{ ldap_server_validate_certs }}"
+    attributes:
+      olcOverlay: "{0}ppolicy"
+      olcPPolicyDefault: "cn=ppolicy,ou=policies,{{ ldap_server_base_dc }}"
+      olcPPolicyUseLockout: "FALSE"
+      olcPPolicyHashCleartext: "TRUE"
+
+# パスワードポリシーの適用
+- name: PPolicy create
+  ldap_entry:
+    dn: "cn=ppolicy,ou=policies,{{ ldap_server_base_dc }}"
+    objectClass:
+      - pwdPolicy
+      - device
+      - top
+    bind_dn: "{{ ldap_server_bind_dn | default(omit) }}"
+    bind_pw: "{{ ldap_server_bind_pw | default(omit) }}"
+    validate_certs: "{{ ldap_server_validate_certs }}"
+    attributes: "{{ ldap_server_ppolicy }}"
+
+# ユーザが自身のパスワードを変更できるように
+- name: Set up the ACL
+  ldap_attr:
+    dn: olcDatabase={1}mdb,cn=config
+    name: olcAccess
+    values: "{{ ldap_server_olc_access_policies }}"
+    state: exact

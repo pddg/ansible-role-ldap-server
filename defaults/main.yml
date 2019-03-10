@@ -37,6 +37,7 @@ ldap_server_validate_certs: no
 ldap_server_container_entries:
   - groups
   - users
+  - policies
 
 # デフォルトで使うホームディレクトリのプレフィクス
 ldap_server_homedir_prefix: /home
@@ -106,3 +107,46 @@ ldap_server_user_entries: []
 #
 # 所属メンバーのuid（not uidNumber）を与える．
 ldap_server_group_entries: []
+
+# OpenLDAPのパスワードポリシーを設定する
+ldap_server_ppolicy:
+  pwdAttribute: userPassword
+  pwdAllowUserChange: "TRUE"
+  # 0: no check, 1: 平文なら検査, 2: ハッシュ化されていても検査
+  pwdCheckQuality: 1
+  # 古いパスワードをいくつ記憶するか．使い回しを防ぐ．
+  # 0なら記憶しない
+  pwdInHistory: 0
+  # 認証に続けて失敗した時アカウントをロック
+  pwdLockout: "FALSE"
+  # 何度失敗したらロックするか
+  pwdMaxFailure: 10
+  # 何秒間の試行を失敗として検知するか
+  pwdFailureCountInterval: 30
+  # パスワードの最小長
+  pwdMinLength: 4
+  # 初回認証時にパスワードの変更を求める
+  # libpam-ldapdはこれを使ってくれないので意味ない…
+  pwdReset: "TRUE"
+  pwdMustChange: "TRUE"
+  # パスワード変更時に前のパスワードを要求する
+  pwdSafeModify: "TRUE"
+
+# olcAccessポリシーの設定
+ldap_server_olc_access_policies:
+  # ユーザパスワードへのanonymousアクセスは認証のみに限定
+  # ユーザ本人とadminのみ変更可能
+  - >-
+    {0}to attrs=userPassword,shadowLastChange
+    by self write
+    by anonymous auth
+    by dn="cn=admin,{{ ldap_server_base_dc }}" write
+    by * none
+  # adminはbase dn以下を全て変更可能．他はreadのみ可能．
+  - >-
+    {1}to dn.base="{{ ldap_server_base_dc }}"
+    by dn="cn=admin,{{ ldap_server_base_dc }}" write
+    by * read
+  # 全てreadのみ可能
+  - >-
+    {2}to * by * read
